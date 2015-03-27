@@ -64,14 +64,6 @@
 
 ;
 ; :Keywords:
-;     max: in, optional
-;          Any value in the input image greater than this value is set to this value
-;          before scaling.
-;
-;     min: in, optional
-;          Any value in the input image less than this value is set to this value
-;          before scaling.
-;
 ;     negative, in, optional, type=boolean, default=0
 ;          If set, the "negative" of the result is returned.
 ;
