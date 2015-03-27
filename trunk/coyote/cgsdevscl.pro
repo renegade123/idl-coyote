@@ -98,12 +98,12 @@
 ; :History:
 ;     Change History::
 ;        Written by: David W. Fanning, 5 June 2012.
-;        Renamed cgSDevScl and retired. 27 Mar 2015. DWF.
+;        Renamed cgSDevScl from SDevScl. 27 Mar 2015. DWF.
 ;
 ; :Copyright:
 ;     Copyright (c) 2012, Fanning Software Consulting, Inc.
 ;-
-FUNCTION SDevScl, image, $
+FUNCTION cgSDevScl, image, $
    EXCLUDE=exclude, $
    MULTIPLIER=multiplier, $
    NEGATIVE=negative, $

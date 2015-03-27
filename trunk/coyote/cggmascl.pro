@@ -1,94 +1,17 @@
-;+
+; docformat = 'rst'
+;
 ; NAME:
-;       GMASCL
+;   cgGmaScl
 ;
 ; PURPOSE:
+;   This is a utility routine to perform basic gray-level pixel transformations of images. 
+;   I think of it as BYTSCL on steroids. It is similar to IMADJUST in _Digital Image 
+;   Processing with MATLAB_ by Gonzales, Wood, and Eddins. It performs a log scaling 
+;   of the image array.
 ;
-;       This is a utility routine to perform basic gray-level pixel
-;       transformations of images. I think of it as BYTSCL on steroids.
-;       It is similar to IMADJUST in _Digital Image Processing with MATLAB_
-;       by Gonzales, Wood, and Eddins. It performs a log scaling of the
-;       image array.
-;
-; AUTHOR:
-;
-;       FANNING SOFTWARE CONSULTING
-;       David Fanning, Ph.D.
-;       1645 Sheely Drive
-;       Fort Collins, CO 80526 USA
-;       Phone: 970-221-0438
-;       E-mail: david@idlcoyote.com
-;       Coyote's Guide to IDL Programming: http://www.idlcoyote.com
-;
-; CATEGORY:
-;
-;       Utilities
-;
-; CALLING SEQUENCE:
-;
-;       scaledImage = GMASCL(image)
-;
-; ARGUMENTS:
-;
-;       image:         The image to be scaled. Written for 2D images, but arrays
-;                      of any size are treated alike.
-;
-; KEYWORDS:
-;
-;       GAMMA:         The exponent in a power-law transformation (image^gamma). A gamma
-;                      value of 1 results in a linear distribution of values between
-;                      OMIN and OMAX. Gamma values less than 1 map darker image values
-;                      into a wider range of output values, and Gamma values
-;                      greater than 1 maps lighter image values into a wider
-;                      range of output values. The gamma value is constrained to
-;                      be greater than 1.0e-6.
-;
-;       MAX:           Any value in the input image greater than this value is
-;                      set to this value before scaling.
-;
-;       MIN:           Any value in the input image less than this value is
-;                      set to this value before scaling.
-;
-;       NEGATIVE:      If set, the "negative" of the result is returned.
-;
-;       OMAX:          The output image is scaled between OMIN and OMAX. The
-;                      default value is 255.
-;
-;       OMIN:          The output image is scaled between OMIN and OMAX. The
-;                      default value is 0.
-; RETURN VALUE:
-;
-;       scaledImage:   The output, scaled into the range OMIN to OMAX. A byte array.
-;
-; COMMON BLOCKS:
-;       None.
-;
-; EXAMPLES:
-;
-;       LoadCT, 0                                            ; Gray-scale colors.
-;       image = cgDemoData(11)                                 ; Load image.
-;       TV, GmaScl(image, Min=30, Max=100)                   ; Similar to BytScl.
-;       TV, GmaScl(image, /Negative)                         ; Produce negative image.
-;       power = Shift(ALog(Abs(FFT(image,-1))), 124, 124)    ; Create power spectrum.
-;       TV, GmaScl(power, Gamma=2.5)                         ; View power specturm with gamma correction.
-;       TV, GmaScl(power, Gamma=2.5, /Negative)              ; Reverse power spectrum.
-;
-; RESTRICTIONS:
-;
-;     Requires cgScaleVector from the Coyote Library:
-;
-;        http://www.idlcoyote.com/programs/cgScaleVector.pro
-;
-; MODIFICATION HISTORY:
-;
-;       Written by:  David W. Fanning, 17 February 2006.
-;       Fixed a problem with output scaling. 1 July 2009. DWF (with input from Bo Milvang-Jensen).
-;       Now setting NAN keyword on all MIN and MAX functions. 2 Dec 2011. DWF.
-;       Renamed cgGmaScl and retired. 27 March 2015. DWF.
-;-
 ;******************************************************************************************;
-;  Copyright (c) 2008, by Fanning Software Consulting, Inc.                                ;
-;  All rights reserved.                                                                    ;
+;                                                                                          ;
+;  Copyright (c) 2015, by Fanning Software Consulting, Inc. All rights reserved.           ;
 ;                                                                                          ;
 ;  Redistribution and use in source and binary forms, with or without                      ;
 ;  modification, are permitted provided that the following conditions are met:             ;
@@ -113,7 +36,77 @@
 ;  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS           ;
 ;  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                            ;
 ;******************************************************************************************;
-FUNCTION GmaScl, image, $
+;
+;+
+; This is a utility routine to perform basic gray-level pixel transformations of images.
+; I think of it as BYTSCL on steroids. It is similar to IMADJUST in _Digital Image 
+; Processing with MATLAB_ by Gonzales, Wood, and Eddins. It performs a log scaling 
+; of the image array.
+;
+; :Categories:
+;    Image Processing
+;
+; :Returns:
+;     A byte scaled image is returned.
+;
+; :Params:
+;    image: in, required
+;       The image to be scaled. Written for 2D images, but arrays of any size are treated alike.
+;
+; :Keywords:
+;     gamma: in, optional, type=float, default=1.0
+;         The exponent in a power-law transformation (image^gamma). A gamma value of 1 results in
+;         a linear distribution of values between OMIN and OMAX. Gamma values less than 1 map
+;         darker image values into a wider range of output values, and Gamma values greater than
+;         1 maps lighter image values into a wider range of output values. The gamma value is
+;         constrained to be greater than 1.0e-6.
+;
+;     max: in, optional
+;          Any value in the input image greater than this value is set to this value
+;          before scaling.
+;
+;     min: in, optional
+;          Any value in the input image less than this value is set to this value
+;          before scaling.
+;
+;     negative, in, optional, type=boolean, default=0
+;          If set, the "negative" of the result is returned.
+;
+;     omax: in, optional, type=byte, default=255
+;          The output image is scaled between OMIN and OMAX.
+;
+;     omin: in, optional, type=byte, default=0
+;          The output image is scaled between OMIN and OMAX.
+;
+; :Examples:
+;       cgLoadCT, 0                                            ; Gray-scale colors.
+;       image = cgDemoData(11)                                 ; Load image.
+;       TVImage, cgGmaScl(image, Min=30, Max=100)              ; Similar to BytScl.
+;       TVImage, cgGmaScl(image, /Negative)                    ; Produce negative image.
+;       power = Shift(ALog(Abs(FFT(image,-1))), 124, 124)      ; Create power spectrum.
+;       TVImage, cgGmaScl(power, Gamma=2.5)                    ; View power specturm with gamma correction.
+;       TVImage, cgGmaScl(power, Gamma=2.5, /Negative)         ; Reverse power spectrum.
+;
+; :Author:
+;       FANNING SOFTWARE CONSULTING::
+;           David W. Fanning
+;           1645 Sheely Drive
+;           Fort Collins, CO 80526 USA
+;           Phone: 970-221-0438
+;           E-mail: david@idlcoyote.com
+;           Coyote's Guide to IDL Programming: http://www.idlcoyote.com
+;
+; :History:
+;     Change History::
+;       Written by:  David W. Fanning, 17 February 2006.
+;       Fixed a problem with output scaling. 1 July 2009. DWF (with input from Bo Milvang-Jensen).
+;       Now setting NAN keyword on all MIN and MAX functions. 2 Dec 2011. DWF.
+;       Renamed cgGmaScl from GmaScl. 27 March 2015. DWF.
+;
+; :Copyright:
+;     Copyright (c) 2006-2015, Fanning Software Consulting, Inc.
+;-
+FUNCTION cgGmaScl, image, $
    GAMMA=gamma, $
    MAX=imageMax, $
    MIN=imageMin, $
