@@ -329,7 +329,7 @@ FUNCTION cgImgScl, image, xsize, ysize, $
              END
     
           2: BEGIN ; Histogram clip stretch.
-             tempImage = ClipScl(tempImage, clip, OMIN=bottom, OMAX=top, NEGATIVE=negative)
+             tempImage = cgClipScl(tempImage, clip, OMIN=bottom, OMAX=top, NEGATIVE=negative)
              END
 
           3: BEGIN ; Gamma log scale stretch.
