@@ -1,90 +1,18 @@
-;+
+; docformat = 'rst'
+;
 ; NAME:
-;       CLIPSCL
+;   cgClipScl
 ;
 ; PURPOSE:
+;   This is a utility routine to perform linear scaling (similar to BYTSCL)
+;   on image arrays. If differs from BYTSCL only in that a user-specified
+;   percentage of pixels can be clipped from the image histogram, prior to
+;   scaling. By default, two percent of the pixels are clipped. Clipping
+;   occurs at both ends of the image histogram.
 ;
-;       This is a utility routine to perform linear scaling (similar to BYTSCL)
-;       on image arrays. If differs from BYTSCL only in that a user-specified
-;       percentage of pixels can be clipped from the image histogram, prior to
-;       scaling. By default, two percent of the pixels are clipped. Clipping
-;       occurs at both ends of the image histogram.
-;
-; AUTHOR:
-;
-;       FANNING SOFTWARE CONSULTING
-;       David Fanning, Ph.D.
-;       1645 Sheely Drive
-;       Fort Collins, CO 80526 USA
-;       Phone: 970-221-0438
-;       E-mail: david@idlcoyote.com
-;       Coyote's Guide to IDL Programming: http://www.idlcoyote.com
-;
-; CATEGORY:
-;
-;       Utilities
-;
-; CALLING SEQUENCE:
-;
-;       scaledImage = CLIPSCL(image, clipPercent)
-;
-; ARGUMENTS:
-;
-;       image:         The image to be scaled. Written for 2D images, but arrays
-;                      of any size are treated alike.
-;
-;       clipPercent:   The percent of image clipping. Optional argument is set
-;                      to 2 by default. Must be value between 0 and 49. Clipping
-;                      occurs from both ends of image histogram, so a clip of 2
-;                      linearly scales approximately 96% of the image histogram.
-;                      Clipping percents are approximations only, and depend
-;                      entirely on the distribution of pixels in the image. For
-;                      interactive scaling, see cgStretch.
-;
-; INPUT KEYWORDS:
-;
-;
-;       NEGATIVE:      If set, the "negative" of the result is returned.
-;
-;       OMAX:          The output image is scaled between OMIN and OMAX. The
-;                      default value is 255.
-;
-;       OMIN:          The output image is scaled between OMIN and OMAX. The
-;                      default value is 0.
-; OUTPUT KEYWORDS:
-;
-;
-;       THRESHOLD:     A two-element array containing the image thresholds for clipping.
-;
-; RETURN VALUE:
-;
-;       scaledImage:   The output, scaled into the range OMIN to OMAX. A byte array.
-;
-; COMMON BLOCKS:
-;       None.
-;
-; EXAMPLES:
-;
-;       LoadCT, 0                                            ; Gray-scale colors.
-;       image = cgDemoData(22)                                 ; Load image.
-;       TV, ClipScl(image, 4)
-;
-; RESTRICTIONS:
-;
-;     Requires cgScaleVector from the Coyote Library:
-;
-;        http://www.idlcoyote.com/programs/cgScaleVector.pro
-;
-; MODIFICATION HISTORY:
-;
-;       Written by:  David W. Fanning, 6 September 2007.
-;       Not sure what this program was doing, but not what I thought. I've reworked
-;          the algorithm to scale the data appropriately. 25 Oct 2011. DWF.
-;       Renamed cgClipScl and retired. 27 March 2015. DWF.
-;-
 ;******************************************************************************************;
-;  Copyright (c) 2008, by Fanning Software Consulting, Inc.                                ;
-;  All rights reserved.                                                                    ;
+;                                                                                          ;
+;  Copyright (c) 2015, by Fanning Software Consulting, Inc. All rights reserved.           ;
 ;                                                                                          ;
 ;  Redistribution and use in source and binary forms, with or without                      ;
 ;  modification, are permitted provided that the following conditions are met:             ;
@@ -109,7 +37,79 @@
 ;  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS           ;
 ;  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                            ;
 ;******************************************************************************************;
-FUNCTION ClipScl, image, clip, $
+;
+;+
+; This is a utility routine to perform linear scaling (similar to BYTSCL)
+; on image arrays. If differs from BYTSCL only in that a user-specified
+; percentage of pixels can be clipped from the image histogram, prior to
+; scaling. By default, two percent of the pixels are clipped. Clipping
+; occurs at both ends of the image histogram.
+;
+; :Categories:
+;    Image Processing
+;
+; :Returns:
+;     A byte scaled image is returned.
+;
+; :Params:
+;    image: in, required
+;       The image to be scaled. Written for 2D images, but arrays of any size are treated alike.
+;       
+;    clip: in, optional, type=float, default=2.0
+;        The percent of image clipping. Must be value between 0 and 49. Clipping
+;        occurs from both ends of image histogram, so a clip of 2.0 linearly scales 
+;        approximately 96% of the image histogram. Clipping percents are approximations 
+;        only, and depend entirely on the distribution of pixels in the image. For
+;        interactive scaling, see cgStretch.
+
+;
+; :Keywords:
+;     max: in, optional
+;          Any value in the input image greater than this value is set to this value
+;          before scaling.
+;
+;     min: in, optional
+;          Any value in the input image less than this value is set to this value
+;          before scaling.
+;
+;     negative, in, optional, type=boolean, default=0
+;          If set, the "negative" of the result is returned.
+;
+;     omax: in, optional, type=byte, default=255
+;          The output image is scaled between OMIN and OMAX.
+;
+;     omin: in, optional, type=byte, default=0
+;          The output image is scaled between OMIN and OMAX.
+;          
+;     threshold: out, optional
+;         A two-element array containing the image thresholds that were used for the clipping.
+;
+; :Examples:
+;    To display a clipped image::
+;       cgLoadCT, 0                                            ; Gray-scale colors.
+;       image = cgDemoData(22)                                 ; Load image.
+;       cgImage, cgClipScl(image, 4)
+;
+; :Author:
+;       FANNING SOFTWARE CONSULTING::
+;           David W. Fanning
+;           1645 Sheely Drive
+;           Fort Collins, CO 80526 USA
+;           Phone: 970-221-0438
+;           E-mail: david@idlcoyote.com
+;           Coyote's Guide to IDL Programming: http://www.idlcoyote.com
+;
+; :History:
+;     Change History::
+;       Written by:  David W. Fanning, 6 September 2007.
+;       Not sure what this program was doing, but not what I thought. I've reworked
+;          the algorithm to scale the data appropriately. 25 Oct 2011. DWF.
+;       Renamed cgClipScl from ClipScl. 27 March 2015. DWF.
+;
+; :Copyright:
+;     Copyright (c) 2007-2015, Fanning Software Consulting, Inc.
+;-
+FUNCTION cgClipScl, image, clip, $
    NEGATIVE=negative, $
    OMAX=maxOut, $
    OMIN=minOut, $

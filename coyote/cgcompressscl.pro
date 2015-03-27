@@ -1,98 +1,19 @@
-;+
+; docformat = 'rst'
+;
 ; NAME:
-;       LOGSCL
+;   cgCompressScl
 ;
 ; PURPOSE:
-;
-;       This is a utility routine to perform a log intensity transformation
-;       on an image. For exponent values greater than 1.0, the upper and
-;       lower values of the image are compressed and centered on the mean.
-;       Larger exponent values provide steeper compression. For exponent values
-;       less than 1.0, the compression is similar to gamma compression. (See
-;       IMGSCL.) See pages 68-70 in _Digital Image Processing with MATLAB_
-;       by Gonzales, Wood, and Eddins. The function is used to improve contrast
-;       in images.
-;
-; AUTHOR:
-;
-;       FANNING SOFTWARE CONSULTING
-;       David Fanning, Ph.D.
-;       1645 Sheely Drive
-;       Fort Collins, CO 80526 USA
-;       Phone: 970-221-0438
-;       E-mail: david@idlcoyote.com
-;       Coyote's Guide to IDL Programming: http://www.idlcoyote.com
-;
-; CATEGORY:
-;
-;       Utilities
-;
-; CALLING SEQUENCE:
-;
-;       outputImage = LOGSCL(image)
-;
-; ARGUMENTS:
-;
-;       image:         The image to be scaled. Written for 2D images, but arrays
-;                      of any size are treated alike.
-;
-; KEYWORDS:
-;
-;       EXPONENT:      The exponent in a log transformation. By default, 4.0.
-;
-;       MEAN:          Values on either side of the mean will be compressed by the log.
-;                      The value is a normalized value between 0.0 and 1.0. By default, 0.5.
-;
-;       NEGATIVE:      If set, the "negative" of the result is returned.
-;
-;       MAX:           Any value in the input image greater than this value is
-;                      set to this value before scaling.
-;
-;       MIN:           Any value in the input image less than this value is
-;                      set to this value before scaling.
-;
-;       OMAX:          The output image is scaled between OMIN and OMAX. The
-;                      default value is 255.
-;
-;       OMIN:          The output image is scaled between OMIN and OMAX. The
-;                      default value is 0.
-; RETURN VALUE:
-;
-;       outputImage:   The output, scaled into the range OMIN to OMAX. A byte array.
-;
-; COMMON BLOCKS:
-;       None.
-;
-; EXAMPLES:
-;
-;       cgLoadCT, 0                                       ; Gray-scale colors.
-;       image = cgDemoData(22)                            ; Load image.
-;       cgImage, image                                    ; No contrast.
-;       cgImage, LogScl(image)                            ; Improved contrast.
-;       cgImage, LogScl(image, Exponent=10, Mean=0.65)    ; Even more contrast.
-;       cgImage, LogScl(image, /Negative, Exponent=5)     ; A negative image.
-;
-; RESTRICTIONS:
-;
-;     Requires cgScaleVector from the Coyote Library:
-;
-;        http://www.idlcoyote.com/programs/cgScaleVector.pro
-;
-; MODIFICATION HISTORY:
-;
-;       Written by:  David W. Fanning, 20 February 2006.
-;       Fixed a problem with output scaling. 1 July 2009. DWF (with input from Bo Milvang-Jensen).
-;       Discovered that I implemented the wrong equation in this routine, so that the program
-;          is implementing a compression stretch, rather than a log stretch. To solve the 
-;          problem, this program is being retired and replaced with two new programs: cgLogScl
-;          will perform the log stretch that this program was suppose to do, and cgCompressScl
-;          will perform the compression stretch that this program actually does. If you currently
-;          use LogScl and you like what it does, replace it with cgCompressScl. If you want
-;          a true logarithmic scaling, use cgLogScl. 27 Mar 2015. DWF.
-;-
+;   This is a utility routine to perform a compression transformation
+;   on an image. For exponent values greater than 1.0, the upper and
+;   lower values of the image are compressed and centered on the mean.
+;   Larger exponent values provide steeper compression. See pages 68-70 in 
+;   _Digital Image Processing with MATLAB_ by Gonzales, Wood, and Eddins. 
+;   The function is used to improve contrast in images.
+;   
 ;******************************************************************************************;
-;  Copyright (c) 2008, by Fanning Software Consulting, Inc.                                ;
-;  All rights reserved.                                                                    ;
+;                                                                                          ;
+;  Copyright (c) 2015, by Fanning Software Consulting, Inc. All rights reserved.           ;
 ;                                                                                          ;
 ;  Redistribution and use in source and binary forms, with or without                      ;
 ;  modification, are permitted provided that the following conditions are met:             ;
@@ -117,7 +38,82 @@
 ;  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS           ;
 ;  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                            ;
 ;******************************************************************************************;
-FUNCTION LogScl, image, $
+;
+;+
+; This is a utility routine to perform a compression transformation
+; on an image. For exponent values greater than 1.0, the upper and
+; lower values of the image are compressed and centered on the mean.
+; Larger exponent values provide steeper compression. See pages 68-70 in 
+; _Digital Image Processing with MATLAB_ by Gonzales, Wood, and Eddins. 
+; The function is used to improve contrast in images. The equation being
+; implemented before scaling between OMIN and OMAX is as follows::
+; 
+;     output = 1.0D / ((1.0D + (mean / (Temporary(input) > 1e-16))^exponent) > (1e-16))
+;
+; :Categories:
+;    Image Processing
+;
+; :Returns:
+;     A byte scaled image is returned.
+;
+; :Params:
+;    image: in, required
+;       The image to be scaled. Written for 2D images, but arrays of any size are treated alike.
+;
+; :Keywords:
+;     exponent: in, optional, type=float, default=4.0
+;         The exponent in the compression transformation. By default, 4.0.
+;
+;     max: in, optional
+;          Any value in the input image greater than this value is set to this value
+;          before scaling.
+;          
+;     mean: in, optional, type=float, default=0.5
+;          Values on either side of the mean will be compressed by the log. The value is a 
+;          normalized value between 0.0 and 1.0. 
+;          
+;     min: in, optional
+;          Any value in the input image less than this value is set to this value
+;          before scaling.
+;
+;     negative, in, optional, type=boolean, default=0
+;          If set, the "negative" of the result is returned.
+;
+;     omax: in, optional, type=byte, default=255
+;          The output image is scaled between OMIN and OMAX.
+;
+;     omin: in, optional, type=byte, default=0
+;          The output image is scaled between OMIN and OMAX.
+;
+; :Examples:
+;    Examples of compression stretching::
+;       cgLoadCT, 0                                              ; Gray-scale colors.
+;       image = cgDemoData(22)                                   ; Load image.
+;       cgImage, image                                           ; No contrast.
+;       cgImage, cgCompressScl(image)                            ; Improved contrast.
+;       cgImage, cgCompressScl(image, Exponent=10, Mean=0.65)    ; Even more contrast.
+;       cgImage, cgCompressScl(image, /Negative, Exponent=5)     ; A negative image.
+;
+; :Author:
+;       FANNING SOFTWARE CONSULTING::
+;           David W. Fanning
+;           1645 Sheely Drive
+;           Fort Collins, CO 80526 USA
+;           Phone: 970-221-0438
+;           E-mail: david@idlcoyote.com
+;           Coyote's Guide to IDL Programming: http://www.idlcoyote.com
+;
+; :History:
+;     Change History::
+;       Written by:  David W. Fanning, 20 February 2006.
+;       Fixed a problem with output scaling. 1 July 2009. DWF (with input from Bo Milvang-Jensen).
+;       Renamed cgCompressScl from LogScl when I discoverd LogScl implemented the wrong scaling equation.
+;          See the documentation in the retired LogScl program for details. 27 March 2015. DWF.
+;
+; :Copyright:
+;     Copyright (c) 2006-2015, Fanning Software Consulting, Inc.
+;-
+FUNCTION cgCompressScl, image, $
    EXPONENT=exponent, $
    MEAN=mean, $
    NEGATIVE=negative, $
@@ -127,14 +123,8 @@ FUNCTION LogScl, image, $
    OMIN=minOut
 
    ; Return to caller on error.
-   ;On_Error, 2
-   Catch, theError
-   IF theError NE 0 THEN BEGIN
-      Catch, /Cancel
-      void = cgErrorMsg()
-      RETURN, vector
-   ENDIF
-
+   On_Error, 2
+   
    ; Check arguments.
    IF N_Elements(image) EQ 0 THEN Message, 'Must pass IMAGE argument.'
 
@@ -166,7 +156,7 @@ FUNCTION LogScl, image, $
    thisExcept = !Except
    !Except = 0
 
-   ; Log scaling.
+   ; Compression scaling.
    output = 1.0D / ((1.0D + (mean / (Temporary(output) > 1e-16))^exponent) > (1e-16))
 
    ; Scale to image coordinates.

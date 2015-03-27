@@ -1,82 +1,15 @@
-;+
+; docformat = 'rst'
+;
 ; NAME:
-;       GAUSSSCL
+;   cgGaussScl
 ;
 ; PURPOSE:
+;   This is a utility routine to perform a gaussian gray-level pixel transformation 
+;   stretch on an image.
 ;
-;       This is a utility routine to perform a gaussian gray-level pixel
-;       transformation stretch on a image.
-;
-; AUTHOR:
-;
-;       FANNING SOFTWARE CONSULTING
-;       David Fanning, Ph.D.
-;       1645 Sheely Drive
-;       Fort Collins, CO 80526 USA
-;       Phone: 970-221-0438
-;       E-mail: david@idlcoyote.com
-;       Coyote's Guide to IDL Programming: http://www.idlcoyote.com
-;
-; CATEGORY:
-;
-;       Utilities
-;
-; CALLING SEQUENCE:
-;
-;       scaledImage = GAUSSSCL(image)
-;
-; ARGUMENTS:
-;
-;       image:         The image to be scaled. Written for 2D images, but arrays
-;                      of any size are treated alike.
-;
-; KEYWORDS:
-;
-;       SIGMA:         The sigma value or width of the Gaussian
-;                      function. Set to 1 by default.
-;
-;
-;       MAX:           Any value in the input image greater than this value is
-;                      set to this value before scaling.
-;
-;       MIN:           Any value in the input image less than this value is
-;                      set to this value before scaling.
-;
-;       NEGATIVE:      If set, the "negative" of the result is returned.
-;
-;       OMAX:          The output image is scaled between OMIN and OMAX. The
-;                      default value is 255.
-;
-;       OMIN:          The output image is scaled between OMIN and OMAX. The
-;                      default value is 0.
-; RETURN VALUE:
-;
-;       scaledImage:   The output, scaled into the range OMIN to OMAX. A byte array.
-;
-; COMMON BLOCKS:
-;       None.
-;
-; EXAMPLES:
-;
-;       LoadCT, 0                                            ; Gray-scale colors.
-;       image = cgDemoData(11)                                 ; Load image.
-;       TV, GaussScl(image)
-;
-; RESTRICTIONS:
-;
-;     Requires cgScaleVector from the Coyote Library:
-;
-;        http://www.idlcoyote.com/programs/cgScaleVector.pro
-;
-; MODIFICATION HISTORY:
-;
-;       Written by:  David W. Fanning, 5 September 2007.
-;       Now setting NAN keyword on all MIN and MAX functions. 2 Dec 2011. DWF.
-;       Renamed cgGaussScl and retired. 26 March 2015. DWF.
-;-
 ;******************************************************************************************;
-;  Copyright (c) 2008, by Fanning Software Consulting, Inc.                                ;
-;  All rights reserved.                                                                    ;
+;                                                                                          ;
+;  Copyright (c) 20150, by Fanning Software Consulting, Inc. All rights reserved.           ;
 ;                                                                                          ;
 ;  Redistribution and use in source and binary forms, with or without                      ;
 ;  modification, are permitted provided that the following conditions are met:             ;
@@ -101,7 +34,67 @@
 ;  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS           ;
 ;  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                            ;
 ;******************************************************************************************;
-FUNCTION GaussScl, image, $
+;
+;+
+; This is a utility routine to perform a gaussian gray-level pixel transformation 
+; stretch on an image.
+;
+; :Categories:
+;    Image Processing
+;    
+; :Returns:
+;     A byte scaled image is returned.
+;
+; :Params:
+;    image: in, required
+;       The image to be scaled. Written for 2D images, but arrays of any size are treated alike.
+;
+; :Keywords:
+;     max: in, optional
+;          Any value in the input image greater than this value is set to this value 
+;          before scaling.
+;
+;     min: in, optional                      
+;          Any value in the input image less than this value is set to this value
+;          before scaling.
+;
+;     negative, in, optional, type=boolean, default=0
+;          If set, the "negative" of the result is returned.
+;
+;     omax: in, optional, type=byte, default=255
+;          The output image is scaled between OMIN and OMAX. 
+;
+;     omin: in, optional, type=byte, default=0
+;          The output image is scaled between OMIN and OMAX. 
+;          
+;     sigma: in, optional, type=float, default=1.0
+;         The sigma value or width of the Gaussian function. 
+;
+; :Examples:
+;     Display a Gaussian scaled image::
+;       cgLoadCT, 0              ; Gray-scale colors.
+;       image = cgDemoData(11)   ; Load image.
+;       cgImage, cgGaussScl(image)
+;
+; :Author:
+;       FANNING SOFTWARE CONSULTING::
+;           David W. Fanning
+;           1645 Sheely Drive
+;           Fort Collins, CO 80526 USA
+;           Phone: 970-221-0438
+;           E-mail: david@idlcoyote.com
+;           Coyote's Guide to IDL Programming: http://www.idlcoyote.com
+;
+; :History:
+;     Change History::
+;       Written by:  David W. Fanning, 5 September 2007.
+;       Now setting NAN keyword on all MIN and MAX functions. 2 Dec 2011. DWF.
+;       Renamed cgGaussScl from the retired GaussScl. 26 March 2015. DWF.
+;
+; :Copyright:
+;     Copyright (c) 2007-2015, Fanning Software Consulting, Inc.
+;-
+FUNCTION cgGaussScl, image, $
    SIGMA=sigma, $
    MAX=imageMax, $
    MIN=imageMin, $
@@ -110,13 +103,7 @@ FUNCTION GaussScl, image, $
    OMIN=minOut
 
    ; Return to caller on error.
-   ;On_Error, 2
-   Catch, theError
-   IF theError NE 0 THEN BEGIN
-      Catch, /Cancel
-      void = cgErrorMsg()
-      RETURN, vector
-   ENDIF
+   On_Error, 2
 
    ; Check arguments.
    IF N_Elements(image) EQ 0 THEN Message, 'Must pass IMAGE argument.'
